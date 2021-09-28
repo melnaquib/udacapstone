@@ -1,6 +1,6 @@
-NAME = amsalama/udacitycapstone
-PNAME = amsalama/udacitycapstone
-VERSION = 1.0.0
+NAME = melnaquib/udacapstone
+PNAME = melnaquib/udacapstone
+VERSION = 1.0
 Dockerfile=Dockerfile
 
 all: build
