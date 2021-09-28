@@ -1,0 +1,122 @@
+version: 2.1
+
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    # parameters:
+    #   # Add parameter here
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            aws s3 rb "s3://udapeople-${CIRCLE_WORKFLOW_ID}" --force
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID}"
+            aws cloudformation delete-stack --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID}"
+orbs:
+  slack: circleci/slack@3.4.2
+  aws-eks: circleci/aws-eks@1.0.3
+jobs:
+  build:
+    docker:
+      - image: python:3.7.3-stretch
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "requirements.txt" }}
+            # fallback to using the latest cache if no exact match is found
+            - v1-dependencies-
+
+      - run:
+          name: install dependencies
+          command: |
+            python --version
+            python3.7 -m venv venv
+            . venv/bin/activate
+            pip install pylint
+            make install
+            # Install hadolint
+            wget -O /bin/hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+            chmod +x /bin/hadolint
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
+      # run lint!
+      - run:
+          name: run lint
+          command: |
+            . venv/bin/activate
+            make lint
+
+  docker-build-push:
+    docker:
+      # - image: circleci/python:3.7.3
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: build docker image
+          command: |
+            docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+            make ppush
+            make NAME=amsalama/udacitycapstonegreen Dockerfile=Dockerfilegreen PNAME=amsalama/udacitycapstonegreen ppush
+  k8sdeploy:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run: yum -y install tar gzip curl wget
+      - run:
+          name: Install EKSCTL and kubectl
+          command: |
+            curl --silent --location "https://github.com/weaveworks/eksctl/releases/download/latest_release/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+            mv /tmp/eksctl /usr/local/bin
+            echo "eksctl version"
+            eksctl version
+            # curl --silent -L "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" -o /usr/local/bin/kubectl
+            #curl --silent -L https://storage.googleapis.com/kubernetes-release/release/1.17.1/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl
+            wget -q https://storage.googleapis.com/kubernetes-release/release/$(wget -q -O - https://storage.googleapis.com/kubernetes-release/release/stable.txt -O -)/bin/linux/amd64/kubectl -O kubectl
+            chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+
+            chmod +x /usr/local/bin/kubectl
+            # mv kubectl /usr/local/bin
+            ls -l /usr/local/bin/kubectl
+            pwd
+            ls -l
+      - run:
+          name: Create Cluster
+          command: |
+            eksctl create cluster -f ./eks-config.yml
+      - run:
+          name: Deploy blue container
+          command: |
+            kubectl apply -f ./blue.yml
+      - run:
+          name: Check on the status of the ReplicationController using this command
+          command: |
+            kubectl describe replicationcontrollers
+            kubectl describe services bluegreenlb
+      - run:
+          name: Deploy green container
+          command: |
+            kubectl apply -f ./green.yml
+      - run:
+          name: Check on the status of the ReplicationController using this command
+          command: |
+            kubectl describe replicationcontrollers
+            kubectl describe services bluegreenlb
+
+workflows:
+  default:
+    jobs:
+      - build
+      - docker-build-push:
+          requires: [build]
+      - k8sdeploy:
+          requires: [docker-build-push]
