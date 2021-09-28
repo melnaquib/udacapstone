@@ -2,7 +2,7 @@ apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 
 metadata:
-  name: d4c-cluster
+  name: udacapstone-cluster
   region: us-west-2
 
 nodeGroups:
