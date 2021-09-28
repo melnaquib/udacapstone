@@ -1,0 +1,26 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: d4c-cluster
+  region: us-west-2
+
+nodeGroups:
+  - name: scale-spot
+    desiredCapacity: 1
+    maxSize: 2
+    instancesDistribution:
+      instanceTypes: ["t2.small"]
+      onDemandBaseCapacity: 0
+      onDemandPercentageAboveBaseCapacity: 0
+    availabilityZones: ["us-west-2c", "us-west-2d"]
+    iam:
+      withAddonPolicies:
+        autoScaler: true
+    labels:
+      nodegroup-type: stateless-workload
+      instance-type: spot
+    ssh:
+      publicKeyName: udapeople
+
+availabilityZones: ["us-west-2c", "us-west-2d"]
