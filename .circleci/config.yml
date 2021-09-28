@@ -65,7 +65,7 @@ jobs:
           command: |
             docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
             make ppush
-            make NAME=amsalama/udacitycapstonegreen Dockerfile=Dockerfilegreen PNAME=amsalama/udacitycapstonegreen ppush
+            make NAME=melnaquib/udacapstonegreen Dockerfile=Dockerfilegreen PNAME=melnaquib/udacapstonegreen ppush
   k8sdeploy:
     docker:
       - image: amazon/aws-cli

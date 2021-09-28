@@ -1,4 +1,4 @@
-FROM nginx:latest
+FROM nginx:1.21.1
 
 ## Step 1:
 RUN rm /usr/share/nginx/html/index.html
