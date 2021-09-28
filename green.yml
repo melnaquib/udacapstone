@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: green
-          image: amsalama/udacitycapstonegreen
+          image: melnaquib/udacapstonegreen
           ports:
             - name: http-server
               containerPort: 80
