@@ -118,5 +118,5 @@ workflows:
       - build
       - docker-build-push:
           requires: [build]
-      - k8sdeploy:
-          requires: [docker-build-push]
+      # - k8sdeploy:
+      #     requires: [docker-build-push]
