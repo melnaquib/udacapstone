@@ -21,6 +21,6 @@ nodeGroups:
       nodegroup-type: stateless-workload
       instance-type: spot
     ssh:
-      publicKeyName: udapeople
+      publicKeyName: uda-project-2
 
 availabilityZones: ["us-west-2c", "us-west-2d"]
